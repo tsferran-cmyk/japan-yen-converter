@@ -1,0 +1,13 @@
+{
+  "name": "JPY a EUR",
+  "short_name": "JPY→EUR",
+  "description": "Calculadora ràpida de iens japonesos a euros amb funcionament offline.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#111827",
+  "lang": "ca-ES",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
