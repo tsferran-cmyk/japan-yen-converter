@@ -77,7 +77,7 @@ const refreshBtn = document.querySelector("#refreshBtn");
 const clearBtn = document.querySelector("#clearBtn");
 const langSelect = document.querySelector("#langSelect");
 
-let lang = localStorage.getItem(LANG_KEY) || (navigator.language || "").toLowerCase().startsWith("en") ? "en" : "ca";
+let lang = localStorage.getItem(LANG_KEY) || (((navigator.language || "").toLowerCase().startsWith("en")) ? "en" : "ca");
 let state;
 
 function cfg() { return CONFIG[lang]; }
