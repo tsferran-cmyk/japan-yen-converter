@@ -273,7 +273,22 @@ window.addEventListener("online", () => { setStatus("online", cfg().statusOnline
 window.addEventListener("offline", () => { setStatus("offline", cfg().statusOffline); render(); });
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" });
+      registration.update();
+      if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
+    } catch (_) {
+      // La web continua funcionant sense service worker.
+    }
+  });
 }
 
 state = loadRate();
