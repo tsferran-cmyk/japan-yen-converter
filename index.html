@@ -1,85 +1,76 @@
 <!doctype html>
 <html lang="ca">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Activitats Japó</title>
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#111827" />
-<link rel="apple-touch-icon" href="icon-192.png" />
-<style>
-:root{--bg:#f5f6f8;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--ok:#16a34a;--drop:#dc2626;--shadow:0 10px 24px rgba(15,23,42,.08)}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-.app{max-width:760px;margin:0 auto;padding:10px 10px 70px}.top{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 90%,rgba(245,246,248,0));padding:8px 0 10px}.title{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px;margin-bottom:8px}.title h1{font-size:20px;margin:0;white-space:nowrap}.topBtns{display:flex;gap:8px;justify-content:end}select,button,input,textarea{font:inherit;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);padding:10px 12px;max-width:100%;min-width:0;width:100%}button{font-weight:750;cursor:pointer;width:auto}.primary{background:var(--accent);border-color:var(--accent);color:#fff}.ghost{background:#fff}.danger{color:var(--drop)}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:var(--shadow)}
-.refGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.refGrid .wide{grid-column:1/-1}.inputClear{position:relative;display:block}.inputClear input{padding-right:42px}.clearInput{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:32px;height:32px;min-width:32px;padding:0;border-radius:10px;color:var(--muted);background:#f9fafb}.small{font-size:12px;color:var(--muted);line-height:1.3}.refStatus{margin-top:7px}.list{display:grid;gap:8px;margin-top:10px}.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:9px 52px 9px 9px;box-shadow:var(--shadow);min-height:82px;overflow:hidden}.card.done{background:#f0fdf4;opacity:.82}.card.discarded{background:#fef2f2;opacity:.55}.cardHead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start}.name{font-size:17px;font-weight:850;color:var(--accent);text-decoration:none;line-height:1.1}.card.done .name{color:#6b7280;text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:#9ca3af}.meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.infoRow{display:flex;align-items:baseline;gap:8px;min-width:0;margin-top:4px;line-height:1.2;flex-wrap:wrap}.dist{font-size:12px;font-weight:850}.dist.near{color:#16a34a}.dist.mid{color:#ea580c}.dist.far{color:#dc2626}.dist.away{color:#dc2626}.price{font-size:12px;color:var(--muted);line-height:1.15}.when{font-weight:850;font-size:13px;text-align:right;white-space:nowrap;max-width:122px;overflow:hidden;text-overflow:ellipsis}.badge{font-size:11px;padding:2px 6px;border-radius:999px;background:#f3f4f6;color:#374151;margin-left:4px}.editBtn{position:absolute;right:8px;top:34px;width:36px;height:44px;min-width:36px;padding:0;border-radius:11px;font-size:16px;display:grid;place-items:center}.iconbtn{min-width:36px;padding:7px 8px;border-radius:10px}.empty{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;color:var(--muted)}
-dialog{border:0;padding:0;border-radius:0;max-width:none;width:100%;height:100%;background:var(--bg);overflow-x:hidden}dialog::backdrop{background:rgba(0,0,0,.35)}.screen{max-width:720px;margin:0 auto;min-height:100%;padding:12px 10px 20px;overflow-x:hidden}.screenHead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.screenHead h2{font-size:22px;margin:0;flex:1}.back{min-width:44px}.form{display:grid;gap:9px}.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;overflow:hidden}.box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow);overflow:hidden}.searchBox{display:grid;gap:7px}.resultList{display:grid;gap:6px;max-height:230px;overflow:auto}.placeResult{text-align:left;border:1px solid var(--line);background:white;border-radius:12px;padding:9px;font-weight:500}.placeResult b{display:block}.placeResult span{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}.selectedPlace{font-size:12px;color:var(--ok);font-weight:750}.footer{position:sticky;bottom:0;background:linear-gradient(rgba(245,246,248,0),var(--bg) 20%);padding-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.file{position:relative;overflow:hidden;display:inline-flex;align-items:center}.file input{position:absolute;inset:0;opacity:0}.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}.filters{display:grid;gap:10px}.checkRow{display:flex;gap:10px;align-items:center}.checkRow input{width:22px;height:22px}.hidden{display:none!important}
-@media(max-width:430px){.app{padding-left:8px;padding-right:8px}.title{grid-template-columns:auto auto auto}.title h1{font-size:19px}.topBtns select,.topBtns button{padding:9px 10px}.panel{padding:9px}.card{padding:8px 50px 8px 8px}.name{font-size:16px}.when{font-size:12px;max-width:112px}.editBtn{right:7px;top:32px;width:35px;height:43px}.refGrid{gap:7px}.grid2{gap:7px}.screen{padding-left:8px;padding-right:8px}.screenHead h2{font-size:20px}.box{padding:8px}.form{gap:8px}.footer{padding-bottom:max(8px,env(safe-area-inset-bottom))}}
-@media(min-width:700px){.refGrid{grid-template-columns:1fr 1fr 1fr 1fr}.refGrid .wide{grid-column:auto}.list{grid-template-columns:1fr 1fr}.tools{grid-template-columns:repeat(4,1fr)}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>JPY Converter</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="app">
-  <div class="top">
-    <div class="title">
-      <h1 data-i18n="title">Activitats Japó</h1>
-      <button id="filtersBtn" class="ghost" data-i18n="filtersTitle">Filtres</button>
-      <div class="topBtns"><select id="lang"><option value="ca">Català</option><option value="en">English</option></select></div>
-    </div>
-    <section class="panel">
-      <div class="refGrid">
-        <button id="locateBtn" class="primary wide" data-i18n="nearMe">📍 Prop de mi</button>
-        <div class="inputClear wide"><input id="refAddress" data-i18n-placeholder="addressPh" placeholder="Adreça o zona: Osaka Station" /><button id="clearRef" class="clearInput" type="button" aria-label="Esborra">×</button></div>
-        <button id="addressBtn" class="ghost" data-i18n="searchAddress">Buscar adreça</button>
-        <button id="addBtn" class="ghost" data-i18n="addActivity">+ Afegir</button>
+  <main class="app">
+    <section class="card hero">
+      <div>
+        <p id="eyebrow" class="eyebrow">Canvi ràpid</p>
+        <h1 id="title">¥ JPY → € EUR</h1>
       </div>
-      <div id="refStatus" class="small refStatus" data-i18n="noRef">Referència: sense ubicació. Pots filtrar igualment; la distància sortirà quan indiquis un punt.</div>
+      <div class="topControls">
+        <select id="langSelect" class="langSelect" aria-label="Idioma">
+          <option value="ca">Català</option>
+          <option value="en">English</option>
+        </select>
+        <span id="statusBadge" class="badge">Comprovant…</span>
+      </div>
     </section>
-  </div>
-  <main id="list" class="list"></main>
-  <div id="empty" class="empty hidden" data-i18n="empty">No hi ha activitats amb aquests filtres.</div>
-</div>
 
-<dialog id="filtersDialog">
-  <div class="screen">
-    <div class="screenHead"><button class="back ghost" id="closeFilters">←</button><h2 data-i18n="filtersTitle">Filtres</h2></div>
-    <div class="box filters">
-      <label class="checkRow"><input type="checkbox" id="sameCity" checked><span data-i18n="sameCity">Només mateixa ciutat que la referència</span></label>
-      <select id="cityFilter"><option value="" data-i18n="allCities">Totes ciutats</option></select>
-      <select id="whenFilter"><option value="" data-i18n="allWhen">Qualsevol moment</option></select>
-      <select id="catFilter"><option value="" data-i18n="allCats">Tots tipus</option></select>
-      <select id="statusFilter"><option value="pending" data-i18n="pending">Pendents</option><option value="all" data-i18n="all">Tot</option><option value="done" data-i18n="done">Fet</option><option value="discarded" data-i18n="discarded">Descartat</option></select>
-      <select id="sortBy"><option value="distance" data-i18n="sortDistance">Ordena: distància</option><option value="city" data-i18n="sortCity">Ordena: ciutat</option><option value="activity" data-i18n="sortActivity">Ordena: activitat</option><option value="when" data-i18n="sortWhen">Ordena: quan</option><option value="duration" data-i18n="sortDuration">Ordena: duració</option><option value="price" data-i18n="sortPrice">Ordena: preu</option></select>
-      <input id="search" data-i18n-placeholder="searchPh" placeholder="Filtrar text" />
-      <div class="tools">
-        <button id="sampleBtn" class="ghost" data-i18n="loadSample">Carrega exemple</button>
-        <label class="ghost file"><span data-i18n="importCsv">Importa CSV</span><input id="csvFile" type="file" accept=".csv,text/csv" /></label>
-        <button id="exportBtn" class="ghost" data-i18n="exportCsv">Exporta CSV</button>
-        <button id="resetBtn" class="ghost danger" data-i18n="clearAll">Esborra tot</button>
+    <section class="card converter">
+      <label id="amountLabel" for="yenInput">Import en iens</label>
+      <div class="inputRow">
+        <span>¥</span>
+        <input id="yenInput" inputmode="decimal" autocomplete="off" placeholder="1000" value="1000" />
+        <button id="clearBtn" class="clearBtn" type="button" aria-label="Esborra">×</button>
       </div>
-    </div>
-  </div>
-</dialog>
 
-<dialog id="editDialog">
-  <div class="screen">
-    <div class="screenHead"><button class="back ghost" id="cancelEdit">←</button><h2 id="dialogTitle">Afegir</h2></div>
-    <div class="box form">
-      <div class="searchBox">
-        <div class="grid2"><input id="placeSearch" data-i18n-placeholder="placeSearchPh" placeholder="Busca lloc: Senso-ji, Tokyo" /><button id="placeSearchBtn" class="ghost" data-i18n="searchPlace">Busca</button></div>
-        <div id="placeStatus" class="small"></div><div id="placeResults" class="resultList hidden"></div><div id="selectedPlace" class="selectedPlace hidden"></div>
+      <div class="resultBox">
+        <p id="resultLabel">Equivalent aproximat</p>
+        <strong id="resultValue">—</strong>
       </div>
-      <input id="fActivity" data-i18n-placeholder="activity" placeholder="Activitat" />
-      <div class="grid2"><input id="fCity" data-i18n-placeholder="city" placeholder="Ciutat" /><input id="fZone" data-i18n-placeholder="zone" placeholder="Zona" /></div>
-      <input id="fAddress" data-i18n-placeholder="addressMaps" placeholder="Adreça per Google Maps" />
-      <div class="grid2"><select id="fWhen"><option>Matí</option><option>Migdia</option><option>Tarda</option><option>Nit</option><option>Tot el dia</option></select><input id="fDuration" data-i18n-placeholder="durationPh" placeholder="Duració: 1h30" /></div>
-      <div class="grid2"><input id="fPrice" data-i18n-placeholder="pricePh" placeholder="Preu: 2100 ¥ / Gratis" /><input id="fCategory" data-i18n-placeholder="catPh" placeholder="Tipus: Anime, Temple..." /></div>
-      <textarea id="fNotes" rows="4" data-i18n-placeholder="notes" placeholder="Notes"></textarea>
-      <label class="checkRow"><input type="checkbox" id="fDone"><span data-i18n="done">Fet</span></label>
-      <label class="checkRow"><input type="checkbox" id="fDiscarded"><span data-i18n="discarded">Descartat</span></label>
-    </div>
-    <div class="footer"><button id="deleteEdit" class="ghost danger hidden" data-i18n="delete">Esborra</button><button id="saveEdit" class="primary" data-i18n="save">Desa</button></div>
-  </div>
-</dialog>
-<script src="app.js"></script>
+
+      <div id="quickAmounts" class="chips" aria-label="Imports ràpids">
+        <button data-yen="100">¥100</button>
+        <button data-yen="500">¥500</button>
+        <button data-yen="1000">¥1.000</button>
+        <button data-yen="5000">¥5.000</button>
+        <button data-yen="10000">¥10.000</button>
+        <button data-yen="50000">¥50.000</button>
+      </div>
+    </section>
+
+    <section class="card settings">
+      <div class="row">
+        <div>
+          <p id="rateLabel" class="label">Canvi utilitzat</p>
+          <p id="rateText" class="value">—</p>
+        </div>
+        <button id="refreshBtn" class="secondary" type="button">Actualitza</button>
+      </div>
+      <p id="updatedText" class="muted">Sense actualitzar encara</p>
+
+      <label id="feeLabel" for="feeInput" class="feeLabel">Comissió targeta / marge (%)</label>
+      <div class="inputRow small">
+        <input id="feeInput" inputmode="decimal" autocomplete="off" value="0" />
+        <span>%</span>
+      </div>
+      <p id="feeText" class="muted">Sense comissió aplicada.</p>
+    </section>
+
+    <section class="card note">
+      <p id="noteText"><strong>Funciona offline:</strong> si no hi ha internet, calcula amb l’últim canvi guardat i t’indica quan es va actualitzar.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>

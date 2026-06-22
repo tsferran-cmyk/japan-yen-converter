@@ -1,7 +1,7 @@
 {
-  "name": "JPY a EUR",
-  "short_name": "JPY→EUR",
-  "description": "Calculadora ràpida de iens japonesos a euros amb funcionament offline.",
+  "name": "JPY Converter",
+  "short_name": "JPY Converter",
+  "description": "Quick Japanese yen converter with offline support. Català: JPY to EUR. English: JPY to MYR.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b1020",

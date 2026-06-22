@@ -1,48 +1,283 @@
-const $=id=>document.getElementById(id);
-const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random().toString(16).slice(2);
-let data=JSON.parse(localStorage.getItem('japanActivities.v9')||localStorage.getItem('japanActivities.v8')||localStorage.getItem('japanActivities.v7')||localStorage.getItem('japanActivities.v6')||localStorage.getItem('japanActivities.v5')||'[]');
-let lang=localStorage.getItem('japanActivities.lang')||'ca';
-let refPoint=null, refCity='', refLabel='', editingId=null, selectedGeo=null;
-const T={ca:{title:'Activitats Japó',filtersTitle:'Filtres',nearMe:'📍 Prop de mi',addressPh:'Adreça o zona: Osaka Station',searchAddress:'Buscar adreça',addActivity:'+ Afegir',noRef:'Referència: sense ubicació. Pots filtrar igualment; la distància sortirà quan indiquis un punt.',empty:'No hi ha activitats amb aquests filtres.',sameCity:'Només mateixa ciutat que la referència',allCities:'Totes ciutats',allWhen:'Qualsevol moment',allCats:'Tots tipus',pending:'Pendents',all:'Tot',done:'Fet',discarded:'Descartat',sortDistance:'Ordena: distància',sortCity:'Ordena: ciutat',sortActivity:'Ordena: activitat',sortWhen:'Ordena: quan',sortDuration:'Ordena: duració',sortPrice:'Ordena: preu',searchPh:'Filtrar text',loadSample:'Carrega exemple',importCsv:'Importa CSV',exportCsv:'Exporta CSV',clearAll:'Esborra tot',edit:'Edita',delete:'Esborra',save:'Desa',activity:'Activitat',city:'Ciutat',zone:'Zona',addressMaps:'Adreça per Google Maps',durationPh:'Duració: 1h30',pricePh:'Preu: 2100 ¥ / Gratis',catPh:'Tipus: Anime, Temple...',notes:'Notes',placeSearchPh:'Busca lloc: Senso-ji, Tokyo',searchPlace:'Busca',placeSearching:'Buscant...',placeError:'No s’ha pogut buscar el lloc.',placeNoResults:'Cap resultat.',placeSelected:'Lloc seleccionat amb coordenades.',locating:'Localitzant...',refCurrent:'Referència: ubicació actual',refAddress:'Referència: ',addrError:'No he trobat aquesta adreça.',geoError:'No s’ha pogut obtenir la ubicació.',sampleLoaded:'Exemple carregat.',confirmClear:'Vols esborrar totes les activitats?',confirmDelete:'Vols esborrar aquesta activitat?',maps:'Maps'},en:{title:'Japan Activities',filtersTitle:'Filters',nearMe:'📍 Near me',addressPh:'Address or area: Osaka Station',searchAddress:'Search address',addActivity:'+ Add',noRef:'Reference: no location. You can still filter; distance appears after setting a point.',empty:'No activities match these filters.',sameCity:'Only same city as reference',allCities:'All cities',allWhen:'Any time',allCats:'All types',pending:'Pending',all:'All',done:'Done',discarded:'Discarded',sortDistance:'Sort: distance',sortCity:'Sort: city',sortActivity:'Sort: activity',sortWhen:'Sort: when',sortDuration:'Sort: duration',sortPrice:'Sort: price',searchPh:'Filter text',loadSample:'Load sample',importCsv:'Import CSV',exportCsv:'Export CSV',clearAll:'Clear all',edit:'Edit',delete:'Delete',save:'Save',activity:'Activity',city:'City',zone:'Area',addressMaps:'Google Maps address',durationPh:'Duration: 1h30',pricePh:'Price: 2100 ¥ / Free',catPh:'Type: Anime, Temple...',notes:'Notes',placeSearchPh:'Search place: Senso-ji, Tokyo',searchPlace:'Search',placeSearching:'Searching...',placeError:'Could not search place.',placeNoResults:'No results.',placeSelected:'Selected place with coordinates.',locating:'Locating...',refCurrent:'Reference: current location',refAddress:'Reference: ',addrError:'Address not found.',geoError:'Could not get location.',sampleLoaded:'Sample loaded.',confirmClear:'Delete all activities?',confirmDelete:'Delete this activity?',maps:'Maps'}};
-function tr(k){return T[lang][k]||T.ca[k]||k} function esc(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-function save(){localStorage.setItem('japanActivities.v9',JSON.stringify(data))}
-function applyLang(){document.documentElement.lang=lang;$('lang').value=lang;document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=tr(e.dataset.i18n));document.querySelectorAll('[data-i18n-placeholder]').forEach(e=>e.placeholder=tr(e.dataset.i18nPlaceholder));render()}
-function hav(a,b,c,d){const R=6371,toRad=x=>x*Math.PI/180;const dLat=toRad(c-a),dLng=toRad(d-b);const x=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLng/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
-function getDistance(i){return refPoint&&i.lat&&i.lng?hav(refPoint.lat,refPoint.lng,i.lat,i.lng):null}
-function norm(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
-function sameCityMatch(i){if(!$('sameCity').checked)return true;if(!refCity)return true;const rc=norm(refCity);return norm(i.city)===rc||norm(i.zone)===rc||norm(i.address).includes(rc)}
-function priceNum(p){const m=String(p||'').replace(/\./g,'').match(/[0-9]+([,.][0-9]+)?/);return m?parseFloat(m[0].replace(',','.')):0}
-function durationNum(s){const t=String(s||'').toLowerCase();let n=0;const h=t.match(/(\d+(?:[,.]\d+)?)\s*h/);const m=t.match(/(\d+)\s*m/);if(h)n+=parseFloat(h[1].replace(',','.'))*60;if(m)n+=parseInt(m[1]);return n}
-function filtered(){const q=norm($('search').value),city=$('cityFilter').value,wh=$('whenFilter').value,cat=$('catFilter').value,st=$('statusFilter').value;let arr=data.filter(i=>sameCityMatch(i));arr=arr.filter(i=>(!city||i.city===city)&&(!wh||i.when===wh)&&(!cat||i.category===cat));arr=arr.filter(i=>st==='all'||(st==='pending'&&!i.done&&!i.discarded)||(st==='done'&&i.done)||(st==='discarded'&&i.discarded));if(q)arr=arr.filter(i=>norm(Object.values(i).join(' ')).includes(q));const sort=$('sortBy').value;arr.sort((a,b)=>{if(sort==='distance')return (getDistance(a)??1e9)-(getDistance(b)??1e9);if(sort==='price')return priceNum(a.price)-priceNum(b.price);if(sort==='duration')return durationNum(a.duration)-durationNum(b.duration);return String(a[sort]||'').localeCompare(String(b[sort]||''),'ca')});return arr}
-function refreshFilters(){const keep={city:$('cityFilter').value,wh:$('whenFilter').value,cat:$('catFilter').value};fillSel('cityFilter',[...new Set(data.map(x=>x.city).filter(Boolean))],tr('allCities'),keep.city);fillSel('whenFilter',[...new Set(data.map(x=>x.when).filter(Boolean))],tr('allWhen'),keep.wh);fillSel('catFilter',[...new Set(data.map(x=>x.category).filter(Boolean))],tr('allCats'),keep.cat)}
-function fillSel(id,vals,first,keep){const el=$(id);el.innerHTML=`<option value="">${first}</option>`+vals.sort().map(v=>`<option>${esc(v)}</option>`).join('');el.value=keep||''}
-function fmtDist(d){if(d==null)return '';if(d<1)return `${Math.round(d*1000)} m`;return `${d.toFixed(2).replace('.',',')} km`}
-function isSameRefCity(i){if(!refCity)return false;const rc=norm(refCity);return norm(i.city)===rc||norm(i.address).includes(rc)}
-function distClass(d,i){if(d==null)return '';if(isSameRefCity(i))return 'near';if(d<=50)return 'mid';return 'far'}
-const JPY_TO_EUR=0.0054, JPY_TO_MYR=0.0289;
-function fmtMoney(n){if(lang==='ca')return n.toLocaleString('ca-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';return 'RM '+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function priceDisplay(p){const raw=String(p||'').trim();if(!raw)return '—';const n=priceNum(raw);if(!n||!/¥|yen|円|jpy/i.test(raw))return esc(raw);const conv=n*(lang==='ca'?JPY_TO_EUR:JPY_TO_MYR);return `${esc(raw)} <span class="conv">(${fmtMoney(conv)})</span>`}
-function mapsUrl(i){const q=encodeURIComponent(i.address||`${i.activity} ${i.city}`);return `https://www.google.com/maps/search/?api=1&query=${q}`}
-function statusBadge(i){return i.discarded?tr('discarded'):i.done?tr('done'):tr('pending')}
-function render(){refreshFilters();const arr=filtered();$('empty').classList.toggle('hidden',arr.length!==0);$('list').innerHTML=arr.map(i=>{const rawD=getDistance(i),d=fmtDist(rawD);const dur=i.duration?` · ⏱ ${esc(i.duration)}`:'';const dist=d?`<span class="dist ${distClass(rawD,i)}">${esc(d)}</span>`:'';const desc=`${esc(i.city||'—')}${i.zone?' · '+esc(i.zone):''}${i.category?' · '+esc(i.category):''}`;const badge=(i.done||i.discarded)?`<span class="badge">${statusBadge(i)}</span>`:'';return `<article class="card ${i.done?'done':''} ${i.discarded?'discarded':''}"><div class="cardHead"><a class="name" href="${mapsUrl(i)}" target="_blank" rel="noopener">${esc(i.activity||'—')}</a><div class="when">${esc(i.when||'—')}${dur}</div></div><div class="infoRow">${dist}<span class="price">${priceDisplay(i.price)}</span></div><div class="meta">${desc}${badge}</div><button class="editBtn" title="${tr('edit')}" data-act="edit" data-id="${i.id}">✏️</button></article>`}).join('')}
-async function geocode(q,limit=1){const url=`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=${limit}`;const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('net');const j=await r.json();if(!j[0])throw new Error('not found');return j.map(x=>({lat:+x.lat,lng:+x.lon,label:x.display_name,name:x.name||x.display_name.split(',')[0],address:x.address||{}}))}
-async function reverseGeocode(lat,lng){const url=`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`;const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('net');const x=await r.json();return {label:x.display_name||'',address:x.address||{}}}
-function knownCity(text){const m=/(Tokyo|Osaka|Kyoto|Kanazawa|Hiroshima|Hakone|Takayama|Kamakura|Miyajima|Barcelona)/i.exec(text||'');return m?m[1].replace(/^tokyo$/i,'Tokyo').replace(/^osaka$/i,'Osaka').replace(/^kyoto$/i,'Kyoto').replace(/^barcelona$/i,'Barcelona'):''}
-function guessCity(addr,label,query=''){return knownCity(query)||knownCity(label)||addr.city||addr.town||addr.village||addr.municipality||addr.county||''}
-function guessZone(addr){return addr.suburb||addr.neighbourhood||addr.city_district||addr.quarter||addr.borough||''}
-async function setAddressRef(){try{const q=$('refAddress').value.trim();if(!q){refPoint=null;refCity='';refLabel='';$('refStatus').textContent=tr('noRef');render();return}$('refStatus').textContent='...';const p=(await geocode(q,1))[0];refPoint=p;refLabel=p.label;refCity=guessCity(p.address,p.label,q);$('refStatus').textContent=`${tr('refAddress')}${p.label}${refCity?' · '+refCity:''}`;render()}catch(e){$('refStatus').textContent=tr('addrError')}}
-function openEdit(id=null){editingId=id;selectedGeo=null;const i=id?data.find(x=>x.id===id):{activity:'',city:'',zone:'',address:'',when:'Matí',duration:'',price:'',category:'',notes:'',done:false,discarded:false,lat:null,lng:null};$('dialogTitle').textContent=id?tr('edit'):tr('addActivity');$('fActivity').value=i.activity||'';$('fCity').value=i.city||'';$('fZone').value=i.zone||'';$('fAddress').value=i.address||'';$('fWhen').value=i.when||'Matí';$('fDuration').value=i.duration||'';$('fPrice').value=i.price||'';$('fCategory').value=i.category||'';$('fNotes').value=i.notes||'';$('fDone').checked=!!i.done;$('fDiscarded').checked=!!i.discarded;$('placeSearch').value=i.activity?`${i.activity} ${i.city||''}`:'';$('placeStatus').textContent='';$('placeResults').innerHTML='';$('placeResults').classList.add('hidden');if(i.lat&&i.lng){selectedGeo={lat:i.lat,lng:i.lng};$('selectedPlace').textContent=`${tr('placeSelected')} (${i.lat.toFixed(5)}, ${i.lng.toFixed(5)})`;$('selectedPlace').classList.remove('hidden')}else $('selectedPlace').classList.add('hidden');$('deleteEdit').classList.toggle('hidden',!id);$('editDialog').showModal();$('editDialog').scrollTop=0;setTimeout(()=>$('placeSearch').focus(),80)}
-async function searchPlace(){const q=$('placeSearch').value.trim();if(!q)return;$('placeStatus').textContent=tr('placeSearching');$('placeResults').innerHTML='';$('placeResults').classList.add('hidden');try{const res=await geocode(q,6);$('placeStatus').textContent=res.length?`${res.length} resultat(s)`:tr('placeNoResults');$('placeResults').innerHTML=res.map((p,idx)=>`<button type="button" class="placeResult" data-idx="${idx}"><b>${esc(p.name)}</b><span>${esc(p.label)}</span></button>`).join('');$('placeResults')._places=res;$('placeResults').classList.remove('hidden')}catch(e){$('placeStatus').textContent=tr('placeError')}}
-function choosePlace(p){selectedGeo={lat:p.lat,lng:p.lng};if(!$('fActivity').value.trim())$('fActivity').value=p.name;$('fAddress').value=p.label;const city=guessCity(p.address,p.label,$('placeSearch').value),zone=guessZone(p.address);if(city&&!$('fCity').value.trim())$('fCity').value=city;if(zone&&!$('fZone').value.trim())$('fZone').value=zone;$('selectedPlace').textContent=`${tr('placeSelected')} (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)})`;$('selectedPlace').classList.remove('hidden');$('placeResults').classList.add('hidden')}
-function sample(){data=[{id:uid(),city:'Tokyo',zone:'Asakusa',activity:'Senso-ji',address:'Senso-ji, Asakusa, Tokyo',when:'Matí',duration:'1h30',price:'Gratis',category:'Temple',lat:35.7148,lng:139.7967,done:false,discarded:false,notes:''},{id:uid(),city:'Tokyo',zone:'Akihabara',activity:'Akihabara',address:'Akihabara, Tokyo',when:'Tarda',duration:'3h',price:'Variable',category:'Anime',lat:35.6984,lng:139.7730,done:false,discarded:false,notes:''},{id:uid(),city:'Osaka',zone:'Umeda',activity:'Umeda Sky Building',address:'Umeda Sky Building, Osaka',when:'Tarda',duration:'1h30',price:'2000 ¥',category:'Mirador',lat:34.7053,lng:135.4905,done:false,discarded:false,notes:''},{id:uid(),city:'Osaka',zone:'Namba',activity:'Dotonbori',address:'Dotonbori, Osaka',when:'Nit',duration:'2h',price:'Variable',category:'Menjar',lat:34.6687,lng:135.5013,done:false,discarded:false,notes:''}];save();render();$('refStatus').textContent=tr('sampleLoaded')}
-function toCsv(){const cols=['city','zone','activity','address','when','duration','price','category','lat','lng','done','discarded','notes'];const rows=[cols.join(',')].concat(data.map(o=>cols.map(c=>'"'+String(o[c]??'').replace(/"/g,'""')+'"').join(',')));const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='activitats-japo.csv';a.click();URL.revokeObjectURL(a.href)}
-function parseCsv(text){const lines=text.split(/\r?\n/).filter(Boolean);const headers=lines.shift().split(',').map(x=>x.replace(/^"|"$/g,''));return lines.map(line=>{let vals=[],cur='',q=false;for(let c of line){if(c==='"')q=!q;else if(c===','&&!q){vals.push(cur);cur=''}else cur+=c}vals.push(cur);let o={id:uid(),done:false,discarded:false};headers.forEach((h,idx)=>{let v=(vals[idx]||'').replace(/""/g,'"');if(['lat','lng'].includes(h))v=v?+v:null;if(['done','discarded'].includes(h))v=v==='true'||v==='1'||v==='sí';o[h]=v});return o})}
-$('lang').onchange=e=>{lang=e.target.value;localStorage.setItem('japanActivities.lang',lang);applyLang()};$('filtersBtn').onclick=()=>$('filtersDialog').showModal();$('closeFilters').onclick=()=>$('filtersDialog').close();
-$('locateBtn').onclick=()=>{if(!navigator.geolocation){$('refStatus').textContent=tr('geoError');return}$('refStatus').textContent=tr('locating');navigator.geolocation.getCurrentPosition(async p=>{refPoint={lat:p.coords.latitude,lng:p.coords.longitude,label:'current'};refCity='';refLabel='current';try{const r=await reverseGeocode(refPoint.lat,refPoint.lng);refLabel=r.label;refCity=guessCity(r.address,r.label);$('refStatus').textContent=`${tr('refCurrent')}${refCity?' · '+refCity:''}`}catch(e){$('refStatus').textContent=tr('refCurrent')}render()},()=>{$('refStatus').textContent=tr('geoError')},{enableHighAccuracy:true,timeout:10000})};
-$('addressBtn').onclick=setAddressRef;$('refAddress').addEventListener('keydown',e=>{if(e.key==='Enter')setAddressRef()});$('clearRef').onclick=()=>{$('refAddress').value='';refPoint=null;refCity='';refLabel='';$('refStatus').textContent=tr('noRef');render();$('refAddress').focus()};$('addBtn').onclick=()=>openEdit();$('cancelEdit').onclick=()=>$('editDialog').close();$('deleteEdit').onclick=()=>{if(!editingId)return;if(confirm(tr('confirmDelete'))){data=data.filter(x=>x.id!==editingId);save();$('editDialog').close();render()}};
-$('placeSearchBtn').onclick=searchPlace;$('placeSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchPlace()}});$('placeResults').onclick=e=>{const b=e.target.closest('.placeResult');if(!b)return;choosePlace($('placeResults')._places[+b.dataset.idx])};
-$('saveEdit').onclick=()=>{const old=editingId?data.find(x=>x.id===editingId):null;const o={id:editingId||uid(),activity:$('fActivity').value,city:$('fCity').value,zone:$('fZone').value,address:$('fAddress').value,when:$('fWhen').value,duration:$('fDuration').value,price:$('fPrice').value,category:$('fCategory').value,notes:$('fNotes').value,done:$('fDone').checked,discarded:$('fDiscarded').checked,lat:selectedGeo?.lat??old?.lat??null,lng:selectedGeo?.lng??old?.lng??null};if(o.done)o.discarded=false;if(o.discarded)o.done=false;if(old)data=data.map(x=>x.id===editingId?o:x);else data.push(o);save();$('editDialog').close();render();if(o.address&&!o.lat){geocode(o.address,1).then(arr=>{const p=arr[0],it=data.find(x=>x.id===o.id);if(it){it.lat=p.lat;it.lng=p.lng;save();render()}}).catch(()=>{})}};
-$('list').onclick=e=>{const b=e.target.closest('button[data-act="edit"]');if(!b)return;openEdit(b.dataset.id)};['cityFilter','whenFilter','catFilter','statusFilter','sortBy','search','sameCity'].forEach(id=>$(id).addEventListener('input',render));
-$('sampleBtn').onclick=sample;$('exportBtn').onclick=toCsv;$('resetBtn').onclick=()=>{if(confirm(tr('confirmClear'))){data=[];save();render()}};$('csvFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;data=data.concat(parseCsv(await f.text()));save();render();e.target.value=''};
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
-applyLang();
+const CONFIG = {
+  ca: {
+    htmlLang: "ca",
+    target: "EUR",
+    symbol: "€",
+    fallbackRate: 0.0054,
+    locale: "ca-ES",
+    currencyLocale: "ca-ES",
+    cacheKey: "jpy_rate_EUR_v3",
+    title: "¥ JPY → € EUR",
+    eyebrow: "Canvi ràpid",
+    amountLabel: "Import en iens",
+    resultLabel: "Equivalent aproximat",
+    rateLabel: "Canvi utilitzat",
+    refresh: "Actualitza",
+    feeLabel: "Comissió targeta / marge (%)",
+    noFee: "Sense comissió aplicada.",
+    initial: "Valor inicial aproximat. Prem “Actualitza” quan tinguis internet.",
+    statusChecking: "Comprovant…",
+    statusUpdating: "Actualitzant…",
+    statusOnline: "Online",
+    statusOffline: "Offline",
+    statusNoNew: "Sense dades noves",
+    never: "mai",
+    now: "ara mateix",
+    minutesAgo: n => `fa ${n} min`,
+    hoursAgo: n => `fa ${n} h`,
+    daysAgo: n => `fa ${n} dies`,
+    updated: (rel, date, source) => `Actualitzat ${rel} · ${date} · font: ${source}`,
+    feeApplied: (fee, yen) => `Inclou un marge/comissió del ${fee}% sobre ${yen} ¥.`,
+    note: "<strong>Funciona offline:</strong> si no hi ha internet, calcula amb l’últim canvi guardat i t’indica quan es va actualitzar.",
+    sourceInitial: "valor inicial"
+  },
+  en: {
+    htmlLang: "en",
+    target: "MYR",
+    symbol: "RM",
+    fallbackRate: 0.0269,
+    locale: "en-GB",
+    currencyLocale: "en-MY",
+    cacheKey: "jpy_rate_MYR_v3",
+    title: "¥ JPY → RM MYR",
+    eyebrow: "Quick exchange",
+    amountLabel: "Amount in yen",
+    resultLabel: "Approximate equivalent",
+    rateLabel: "Rate used",
+    refresh: "Refresh",
+    feeLabel: "Card fee / margin (%)",
+    noFee: "No fee applied.",
+    initial: "Approximate initial value. Tap “Refresh” when you have internet.",
+    statusChecking: "Checking…",
+    statusUpdating: "Updating…",
+    statusOnline: "Online",
+    statusOffline: "Offline",
+    statusNoNew: "No new data",
+    never: "never",
+    now: "just now",
+    minutesAgo: n => `${n} min ago`,
+    hoursAgo: n => `${n} h ago`,
+    daysAgo: n => `${n} days ago`,
+    updated: (rel, date, source) => `Updated ${rel} · ${date} · source: ${source}`,
+    feeApplied: (fee, yen) => `Includes a ${fee}% card fee/margin on ¥${yen}.`,
+    note: "<strong>Works offline:</strong> if there is no internet, it uses the last saved exchange rate and shows when it was updated.",
+    sourceInitial: "initial value"
+  }
+};
+
+const LANG_KEY = "jpy_converter_lang_v3";
+const yenInput = document.querySelector("#yenInput");
+const feeInput = document.querySelector("#feeInput");
+const resultValue = document.querySelector("#resultValue");
+const rateText = document.querySelector("#rateText");
+const updatedText = document.querySelector("#updatedText");
+const feeText = document.querySelector("#feeText");
+const statusBadge = document.querySelector("#statusBadge");
+const refreshBtn = document.querySelector("#refreshBtn");
+const clearBtn = document.querySelector("#clearBtn");
+const langSelect = document.querySelector("#langSelect");
+
+let lang = localStorage.getItem(LANG_KEY) || (navigator.language || "").toLowerCase().startsWith("en") ? "en" : "ca";
+let state;
+
+function cfg() { return CONFIG[lang]; }
+
+function parseNumber(value) {
+  if (!value) return 0;
+  return Number(String(value).replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, "")) || 0;
+}
+
+function formatTarget(value) {
+  return new Intl.NumberFormat(cfg().currencyLocale, {
+    style: "currency",
+    currency: cfg().target,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+function formatJPY(value) {
+  return new Intl.NumberFormat(cfg().locale, { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatDate(iso) {
+  if (!iso) return cfg().never;
+  return new Intl.DateTimeFormat(cfg().locale, { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
+}
+
+function relativeTime(iso) {
+  if (!iso) return cfg().never;
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return cfg().now;
+  if (minutes < 60) return cfg().minutesAgo(minutes);
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return cfg().hoursAgo(hours);
+  const days = Math.round(hours / 24);
+  return cfg().daysAgo(days);
+}
+
+function loadRate() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(cfg().cacheKey));
+    if (cached?.rate) return cached;
+  } catch (_) {}
+  // Compatibility with the original EUR app cache.
+  if (cfg().target === "EUR") {
+    try {
+      const old = JSON.parse(localStorage.getItem("jpy_eur_rate_cache_v2") || localStorage.getItem("jpy_eur_rate_cache_v1"));
+      if (old?.rate) return old;
+    } catch (_) {}
+  }
+  return { rate: cfg().fallbackRate, updatedAt: null, source: cfg().sourceInitial };
+}
+
+function saveRate(rate, source = "currency-api") {
+  state = { rate, updatedAt: new Date().toISOString(), source };
+  localStorage.setItem(cfg().cacheKey, JSON.stringify(state));
+}
+
+function setStatus(kind, text) {
+  statusBadge.className = `badge ${kind}`;
+  statusBadge.textContent = text;
+}
+
+function focusYen(select = false) {
+  window.setTimeout(() => {
+    yenInput.focus({ preventScroll: true });
+    if (select) yenInput.select();
+  }, 50);
+}
+
+function applyLanguage() {
+  const c = cfg();
+  document.documentElement.lang = c.htmlLang;
+  document.title = c.title;
+  document.querySelector("#title").textContent = c.title;
+  document.querySelector("#eyebrow").textContent = c.eyebrow;
+  document.querySelector("#amountLabel").textContent = c.amountLabel;
+  document.querySelector("#resultLabel").textContent = c.resultLabel;
+  document.querySelector("#rateLabel").textContent = c.rateLabel;
+  document.querySelector("#feeLabel").textContent = c.feeLabel;
+  document.querySelector("#noteText").innerHTML = c.note;
+  refreshBtn.textContent = c.refresh;
+  clearBtn.setAttribute("aria-label", lang === "ca" ? "Esborra" : "Clear");
+  langSelect.value = lang;
+  setStatus(navigator.onLine ? "online" : "offline", navigator.onLine ? c.statusOnline : c.statusOffline);
+}
+
+function render() {
+  const yen = parseNumber(yenInput.value);
+  const fee = Math.max(0, parseNumber(feeInput.value));
+  const targetValue = yen * state.rate * (1 + fee / 100);
+  const rateFormatted = state.rate.toLocaleString(cfg().locale, { minimumFractionDigits: 6, maximumFractionDigits: 6 });
+
+  resultValue.textContent = formatTarget(targetValue);
+  rateText.textContent = `1 ¥ = ${rateFormatted} ${cfg().symbol}`;
+  updatedText.textContent = state.updatedAt
+    ? cfg().updated(relativeTime(state.updatedAt), formatDate(state.updatedAt), state.source)
+    : cfg().initial;
+  feeText.textContent = fee > 0
+    ? cfg().feeApplied(fee.toLocaleString(cfg().locale), formatJPY(yen))
+    : cfg().noFee;
+}
+
+async function fetchWithTimeout(url, timeoutMs = 7000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { cache: "no-store", signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function getRateFromCurrencyApi() {
+  const targetLower = cfg().target.toLowerCase();
+  const url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/jpy.json";
+  const response = await fetchWithTimeout(url);
+  if (!response.ok) throw new Error("currency-api unavailable");
+  const data = await response.json();
+  const rate = data?.jpy?.[targetLower];
+  if (!rate) throw new Error(`Response without ${cfg().target} rate`);
+  return { rate, source: "currency-api · jsDelivr" };
+}
+
+async function getRateFromFrankfurter() {
+  if (cfg().target !== "EUR") throw new Error("Frankfurter only used here for EUR fallback");
+  const response = await fetchWithTimeout("https://api.frankfurter.app/latest?from=JPY&to=EUR");
+  if (!response.ok) throw new Error("frankfurter unavailable");
+  const data = await response.json();
+  const rate = data?.rates?.EUR;
+  if (!rate) throw new Error("Response without EUR rate");
+  return { rate, source: "frankfurter.app" };
+}
+
+async function updateRate() {
+  if (!navigator.onLine) {
+    setStatus("offline", cfg().statusOffline);
+    render();
+    return;
+  }
+
+  setStatus("", cfg().statusUpdating);
+  refreshBtn.disabled = true;
+
+  try {
+    let result;
+    try {
+      result = await getRateFromCurrencyApi();
+    } catch (_) {
+      result = await getRateFromFrankfurter();
+    }
+    saveRate(result.rate, result.source);
+    setStatus("online", cfg().statusOnline);
+  } catch (error) {
+    setStatus("offline", cfg().statusNoNew);
+  } finally {
+    refreshBtn.disabled = false;
+    render();
+    focusYen(false);
+  }
+}
+
+function switchLanguage(newLang) {
+  lang = newLang;
+  localStorage.setItem(LANG_KEY, lang);
+  state = loadRate();
+  applyLanguage();
+  render();
+  updateRate();
+}
+
+yenInput.addEventListener("input", render);
+yenInput.addEventListener("focus", () => yenInput.select());
+feeInput.addEventListener("input", render);
+refreshBtn.addEventListener("click", updateRate);
+langSelect.addEventListener("change", event => switchLanguage(event.target.value));
+clearBtn.addEventListener("click", () => {
+  yenInput.value = "";
+  render();
+  focusYen(false);
+});
+
+document.querySelectorAll("[data-yen]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    yenInput.value = btn.dataset.yen;
+    render();
+    focusYen(true);
+  });
+});
+
+window.addEventListener("online", () => { setStatus("online", cfg().statusOnline); updateRate(); });
+window.addEventListener("offline", () => { setStatus("offline", cfg().statusOffline); render(); });
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+}
+
+state = loadRate();
+applyLanguage();
+render();
+focusYen(true);
+updateRate();
